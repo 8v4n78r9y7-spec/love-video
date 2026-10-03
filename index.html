@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>❤️ إلى حبيبتي ❤️</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background:
+        radial-gradient(circle at center, #3b071c 0%, #16000c 45%, #020104 100%);
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+#canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.message {
+    position: fixed;
+    left: 50%;
+    bottom: 13%;
+    transform: translate(-50%, 30px) scale(.8);
+    width: 95%;
+    text-align: center;
+    opacity: 0;
+    transition:
+        opacity 2s ease,
+        transform 2s cubic-bezier(.17,.89,.32,1.28);
+}
+
+.message.show {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+}
+
+.message h1 {
+    margin: 0;
+    font-size: clamp(27px, 7vw, 55px);
+    color: #fff;
+    text-shadow:
+        0 0 8px #ff668c,
+        0 0 20px #ff174f,
+        0 0 45px #ff174f;
+    line-height: 1.7;
+}
+
+.message p {
+    margin-top: 10px;
+    font-size: clamp(15px, 4vw, 22px);
+    color: #ffdce5;
+    text-shadow: 0 0 10px #ff3d6b;
+}
+
+.flash {
+    position: fixed;
+    inset: 0;
+    background: #ff174f;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.flash.show {
+    animation: flash .8s ease;
+}
+
+@keyframes flash {
+    0% { opacity: 0; }
+    25% { opacity: .12; }
+    100% { opacity: 0; }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="flash" id="flash"></div>
+
+<div class="message" id="message">
+    <h1>「 كُل عَام وَإنتِ بِألف خَير ❤️ 」</h1>
+    <p>إلى أجمل شخص بقلبي 🌹</p>
+</div>
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let particles = [];
+let width;
+let height;
+
+function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+
+    canvas.width = width * devicePixelRatio;
+    canvas.height = height * devicePixelRatio;
+
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+
+    ctx.setTransform(
+        devicePixelRatio,
+        0,
+        0,
+        devicePixelRatio,
+        0,
+        0
+    );
+}
+
+resize();
+window.addEventListener("resize", resize);
+
+
+/* شكل القلب */
+function heartPoint(t, scale) {
+
+    const x = 16 * Math.pow(Math.sin(t), 3);
+
+    const y =
+        13 * Math.cos(t)
+        - 5 * Math.cos(2 * t)
+        - 2 * Math.cos(3 * t)
+        - Math.cos(4 * t);
+
+    return {
+        x: x * scale,
+        y: -y * scale
+    };
+}
+
+
+/* إنشاء آلاف النقاط */
+function createHeart() {
+
+    particles = [];
+
+    const centerX = width / 2;
+    const centerY = height * 0.40;
+
+    const scale =
+        Math.min(width, height) / 32;
+
+    for (let i = 0; i < 1800; i++) {
+
+        const t =
+            Math.random() * Math.PI * 2;
+
+        const edge =
+            heartPoint(t, scale);
+
+        const distance =
+            Math.sqrt(Math.random());
+
+        const targetX =
+            centerX + edge.x * distance;
+
+        const targetY =
+            centerY + edge.y * distance;
+
+        particles.push({
+
+            x: targetX,
+            y: targetY,
+
+            startX:
+                Math.random() * width,
+
+            startY:
+                Math.random() * height,
+
+            size:
+                Math.random() * 2.2 + .5,
+
+            delay:
+                Math.random() * 2.2,
+
+            alpha:
+                Math.random() * .6 + .4,
+
+            color:
+                Math.random() > .18
+                ? "#ff315d"
+                : "#ffd1dc"
+        });
+    }
+}
+
+createHeart();
+
+
+const startTime = performance.now();
+
+function animate(now) {
+
+    ctx.clearRect(0, 0, width, height);
+
+    const elapsed =
+        (now - startTime) / 1000;
+
+    const centerX = width / 2;
+    const centerY = height * .40;
+
+    particles.forEach(p => {
+
+        let progress =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    (elapsed - p.delay) / 2.5
+                )
+            );
+
+        const ease =
+            1 - Math.pow(1 - progress, 3);
+
+        let x =
+            p.startX +
+            (p.x - p.startX) * ease;
+
+        let y =
+            p.startY +
+            (p.y - p.startY) * ease;
+
+
+        /* نبض القلب */
+
+        let pulse = 1;
+
+        if (elapsed > 3.2) {
+
+            pulse =
+                1 +
+                Math.sin(
+                    (elapsed - 3.2) * 4
+                ) * .035;
+        }
+
+        x =
+            centerX +
+            (x - centerX) * pulse;
+
+        y =
+            centerY +
+            (y - centerY) * pulse;
+
+
+        ctx.beginPath();
+
+        ctx.fillStyle = p.color;
+
+        ctx.globalAlpha =
+            p.alpha *
+            Math.min(1, progress * 1.5);
+
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "#ff174f";
+
+        ctx.arc(
+            x,
+            y,
+            p.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    });
+
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+
+
+    /* هالة القلب */
+
+    if (elapsed > 3) {
+
+        const pulse =
+            1 +
+            Math.sin(
+                (elapsed - 3) * 4
+            ) * .04;
+
+        const radius =
+            Math.min(width, height)
+            * .20
+            * pulse;
+
+        const gradient =
+            ctx.createRadialGradient(
+                centerX,
+                centerY,
+                10,
+                centerX,
+                centerY,
+                radius
+            );
+
+        gradient.addColorStop(
+            0,
+            "rgba(255,20,80,.10)"
+        );
+
+        gradient.addColorStop(
+            1,
+            "rgba(255,20,80,0)"
+        );
+
+        ctx.fillStyle = gradient;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            radius,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+
+    requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+
+
+/* ظهور التهنئة */
+
+setTimeout(() => {
+
+    document
+        .getElementById("flash")
+        .classList.add("show");
+
+    document
+        .getElementById("message")
+        .classList.add("show");
+
+}, 5200);
+
+
+/* قلوب صغيرة بالخلفية */
+
+function floatingHeart() {
+
+    const heart =
+        document.createElement("div");
+
+    heart.innerHTML =
+        ["❤️","💕","💗","💖"][
+            Math.floor(Math.random() * 4)
+        ];
+
+    heart.style.position = "fixed";
+    heart.style.left =
+        Math.random() * 100 + "vw";
+
+    heart.style.bottom = "-30px";
+
+    heart.style.fontSize =
+        (12 + Math.random() * 20) + "px";
+
+    heart.style.opacity = ".7";
+
+    heart.style.pointerEvents = "none";
+
+    heart.style.zIndex = "2";
+
+    heart.style.filter =
+        "drop-shadow(0 0 8px #ff174f)";
+
+    const duration =
+        5 + Math.random() * 5;
+
+    heart.style.transition =
+        `transform ${duration}s linear,
+         opacity ${duration}s linear`;
+
+    document.body.appendChild(heart);
+
+    requestAnimationFrame(() => {
+
+        heart.style.transform =
+            `translateY(-110vh)
+             translateX(${(Math.random() - .5) * 100}px)`;
+
+        heart.style.opacity = "0";
+    });
+
+    setTimeout(() => {
+        heart.remove();
+    }, duration * 1000);
+}
+
+setInterval(floatingHeart, 500);
+
+</script>
+
+</body>
+</html>
